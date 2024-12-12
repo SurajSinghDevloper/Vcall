@@ -56,7 +56,9 @@ const Room = () => {
                 socketRef.current = io('https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
                     host: 'https://vcall-peer-server.onrender.com',
+                    port: 443,
                     path: '/peerjs',
+                    secure: true,
                 });
 
                 // Check if mediaDevices is available in the browser
