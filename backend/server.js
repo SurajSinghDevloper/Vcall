@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
-const { v4: uuidV4 } = require('uuid');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 

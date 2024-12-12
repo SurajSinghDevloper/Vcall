@@ -1,10 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidV4 } from "uuid";
 
 const Home = () => {
     const [meetingID, setMeetingID] = useState("");
     const navigate = useNavigate();
+
+    // Check if the user is logged in by verifying the presence of a token
+    useEffect(() => {
+        const token = localStorage.getItem("authToken"); // Or sessionStorage
+        if (!token) {
+            // Redirect to login page if the user is not logged in
+            navigate("/");
+        }
+    }, [navigate]);
 
     const createNewMeeting = () => {
         const id = uuidV4();
