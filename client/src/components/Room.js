@@ -58,7 +58,10 @@ const Room = () => {
                 const userId = JSON.parse(user)?._id;
                 console.log("USER_ID ====>> ", userId)
 
-                socketRef.current = io('https://vcall-ouea.onrender.com');
+                socketRef.current = io('https://vcall-ouea.onrender.com', {
+                    transports: ['websocket'],
+                    withCredentials: true
+                });
                 peerRef.current = new Peer(undefined, {
                     host: 'vcall-peer-server.onrender.com',
                     port: 443,
