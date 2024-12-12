@@ -295,7 +295,6 @@ const Room = () => {
     const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
-    const [setFullscreenVideo] = useState(null);
     const [connectedUsers, setConnectedUsers] = useState([]); // Connected users state
 
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
@@ -326,22 +325,12 @@ const Room = () => {
     useEffect(() => {
         const initSocketAndPeer = async () => {
             try {
-                // Retrieve userId from localStorage
                 const user = localStorage.getItem('user');
                 if (!user) {
                     console.error("User ID not found in localStorage");
                     return;
                 }
                 const userId = JSON.parse(user)?._id;
-                console.log("USER_ID ====>> ", userId)
-                // socketRef.current = io('http://localhost:8080');
-                // peerRef.current = new Peer(undefined, {
-                //     host: '/',
-                //     port: 8988,
-                //     path: '/peerjs',
-                //     secure: false
-                // });
-
                 socketRef.current = io('https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
                     host: 'vcall-peer-server.onrender.com',
@@ -350,7 +339,6 @@ const Room = () => {
                     secure: true,
                 });
 
-                // Check if mediaDevices is available in the browser
                 if (navigator.mediaDevices) {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     streamRef.current = stream;
@@ -366,7 +354,7 @@ const Room = () => {
                         });
                     });
 
-                    socketRef.current.emit('join-room', roomId, userId); // Emit room join event
+                    socketRef.current.emit('join-room', roomId, userId);
 
                     socketRef.current.on('user-connected', (userId) => {
                         setConnectedUsers(prevUsers => [...prevUsers, userId]);
@@ -378,10 +366,9 @@ const Room = () => {
                     });
 
                     socketRef.current.on('createMessage', ({ sender, text }) => {
-                        setMessages((prevMessages) => [...prevMessages, { sender, text }]);
+                        setMessages(prevMessages => [...prevMessages, { sender, text }]);
                     });
 
-                    // Listen for the updated user list after each user connection
                     socketRef.current.on('update-connected-users', (users) => {
                         setConnectedUsers(users);
                     });
@@ -410,8 +397,8 @@ const Room = () => {
 
     const handleSendMessage = useCallback((text) => {
         const message = { sender: peerRef.current.id, text };
-        setMessages((prevMessages) => [...prevMessages, message]);
-        socketRef.current?.emit('sendMessage', message);
+        setMessages(prevMessages => [...prevMessages, message]);
+        socketRef.current?.emit('createMessage', { sender: peerRef.current.id, text });
     }, []);
 
     const startScreenSharing = async () => {
@@ -475,7 +462,7 @@ const Room = () => {
     };
 
     const handleVideoClick = (video) => {
-        setFullscreenVideo(video);
+        // setFullscreenVideo(video);
     };
 
     return (
@@ -532,5 +519,6 @@ const Room = () => {
         </div>
     );
 };
+
 
 export default Room;
