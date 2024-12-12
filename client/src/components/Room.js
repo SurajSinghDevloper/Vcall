@@ -246,6 +246,8 @@ const Room = () => {
         }
     };
 
+    console.log("CONNECTED USER DATA ===> ", connectedUsers)
+
     const stopScreenSharing = () => {
         if (screenShareStreamRef.current) {
             screenShareStreamRef.current.getTracks().forEach(track => track.stop());
