@@ -42,7 +42,7 @@ const AuthForm = () => {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            navigate(isSignup ? "/login" : "/dashboard");
+            navigate(isSignup ? "/" : "/dashboard");
         } catch (error) {
             setErrorMessage(error.message || "An unexpected error occurred");
         } finally {
