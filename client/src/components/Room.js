@@ -4,7 +4,7 @@ import io from 'socket.io-client';
 import Peer from 'peerjs';
 import Chat from './Chat';
 import Card from '@mui/material/Card';
-import { Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { Button } from '@mui/material';
 
 const Room = () => {
     const { roomId } = useParams();
@@ -19,12 +19,8 @@ const Room = () => {
     const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
-    const [fullscreenVideo, setFullscreenVideo] = useState(null);
-    const [audioDevices, setAudioDevices] = useState([]);
-    const [videoDevices, setVideoDevices] = useState([]);
-    const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
-    const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
-    const [connectedUsers, setConnectedUsers] = useState([]);
+    const [setFullscreenVideo] = useState(null);
+    const [connectedUsers, setConnectedUsers] = useState([]); // Connected users state
 
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
         video.srcObject = stream;
@@ -60,7 +56,16 @@ const Room = () => {
                     console.error("User ID not found in localStorage");
                     return;
                 }
-                const userId = user?._id;
+                const userId = JSON.parse(user)?._id;
+                console.log("USER_ID ====>> ", userId)
+                // socketRef.current = io('http://localhost:8080');
+                // peerRef.current = new Peer(undefined, {
+                //     host: '/',
+                //     port: 8988,
+                //     path: '/peerjs',
+                //     secure: false
+                // });
+
                 socketRef.current = io('https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
                     host: 'https://vcall-peer-server.onrender.com',
@@ -85,7 +90,7 @@ const Room = () => {
                         });
                     });
 
-                    socketRef.current.emit('join-room', roomId, userId); // Use userId from localStorage
+                    socketRef.current.emit('join-room', roomId, userId); // Emit room join event
 
                     socketRef.current.on('user-connected', (userId) => {
                         setConnectedUsers(prevUsers => [...prevUsers, userId]);
@@ -98,6 +103,11 @@ const Room = () => {
 
                     socketRef.current.on('createMessage', ({ sender, text }) => {
                         setMessages((prevMessages) => [...prevMessages, { sender, text }]);
+                    });
+
+                    // Listen for the updated user list after each user connection
+                    socketRef.current.on('update-connected-users', (users) => {
+                        setConnectedUsers(users);
                     });
                 } else {
                     console.error('Media devices are not supported in this environment.');
@@ -222,6 +232,7 @@ const Room = () => {
                     <Chat messages={messages} onSendMessage={handleSendMessage} />
                 </Card>
             </div>
+
             <Card className="m-4 p-4">
                 <h2 className="text-xl font-bold mb-2">Connected Users</h2>
                 <ul>
@@ -230,37 +241,8 @@ const Room = () => {
                     ))}
                 </ul>
             </Card>
+
             <Card className="m-4 p-4  flex justify-center items-center space-x-4">
-                <Card >
-                    <FormControl>
-                        <InputLabel>Audio Device</InputLabel>
-                        <Select
-                            value={selectedAudioDevice}
-                            onChange={(e) => setSelectedAudioDevice(e.target.value)}
-                        >
-                            {audioDevices.map((device) => (
-                                <MenuItem key={device.deviceId} value={device.deviceId}>
-                                    {device.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    <FormControl>
-                        <InputLabel>Video Device</InputLabel>
-                        <Select
-                            value={selectedVideoDevice}
-                            onChange={(e) => setSelectedVideoDevice(e.target.value)}
-                        >
-                            {videoDevices.map((device) => (
-                                <MenuItem key={device.deviceId} value={device.deviceId}>
-                                    {device.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Card>
-
                 <Button onClick={isScreenSharing ? stopScreenSharing : startScreenSharing} variant="contained" color={isScreenSharing ? "secondary" : "primary"}>
                     {isScreenSharing ? 'Stop Screen Sharing' : 'Start Screen Sharing'}
                 </Button>

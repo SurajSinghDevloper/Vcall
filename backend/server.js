@@ -39,7 +39,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 io.on('connection', (socket) => {
-    console.log('User connected');
+    console.log('User connected', socket.id);
 
     socket.on('join-room', (roomId, userId) => {
         socket.join(roomId);
