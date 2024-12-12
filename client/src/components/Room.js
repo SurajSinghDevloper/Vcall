@@ -47,6 +47,85 @@ const Room = () => {
         }
     }, [addVideoStream]);
 
+    // useEffect(() => {
+    //     const initSocketAndPeer = async () => {
+    //         try {
+    //             const user = localStorage.getItem('user');
+    //             if (!user) {
+    //                 console.error("User ID not found in localStorage");
+    //                 return;
+    //             }
+    //             const userId = JSON.parse(user)?._id;
+    //             console.log("USER_ID ====>> ", userId)
+
+    //             socketRef.current = io('https://vcall-ouea.onrender.com', {
+    //                 transports: ['websocket'],
+    //                 withCredentials: true
+    //             });
+    //             peerRef.current = new Peer(undefined, {
+    //                 host: 'vcall-peer-server.onrender.com',
+    //                 port: 443,
+    //                 path: '/peerjs',
+    //                 secure: true,
+    //             });
+
+    //             if (navigator.mediaDevices) {
+    //                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    //                 streamRef.current = stream;
+    //                 if (myVideo.current) {
+    //                     addVideoStream(myVideo.current, stream, true);
+    //                 }
+
+    //                 peerRef.current.on('call', (call) => {
+    //                     call.answer(stream);
+    //                     const video = document.createElement('video');
+    //                     call.on('stream', (userVideoStream) => {
+    //                         addVideoStream(video, userVideoStream);
+    //                     });
+    //                 });
+
+    //                 socketRef.current.emit('join-room', roomId, userId); // Emit room join event
+
+    //                 socketRef.current.on('user-connected', (userId) => {
+    //                     setConnectedUsers(prevUsers => [...prevUsers, userId]);
+    //                     connectToNewUser(userId, stream);
+    //                 });
+
+    //                 socketRef.current.on('user-disconnected', (userId) => {
+    //                     setConnectedUsers(prevUsers => prevUsers.filter(id => id !== userId));
+    //                 });
+
+    //                 socketRef.current.on('createMessage', ({ sender, text }) => {
+    //                     setMessages((prevMessages) => [...prevMessages, { sender, text }]);
+    //                 });
+
+    //                 socketRef.current.on('update-connected-users', (users) => {
+    //                     setConnectedUsers(users);
+    //                 });
+    //             } else {
+    //                 console.error('Media devices are not supported in this environment.');
+    //             }
+    //         } catch (error) {
+    //             console.error("Error initializing socket or peer:", error);
+    //         }
+    //     };
+
+    //     initSocketAndPeer();
+
+    //     return () => {
+    //         socketRef.current?.disconnect();
+    //         peerRef.current?.destroy();
+    //         if (streamRef.current) {
+    //             streamRef.current.getTracks().forEach(track => track.stop());
+    //         }
+    //         if (screenShareStreamRef.current) {
+    //             screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+    //         }
+    //         Object.values(peers).forEach(call => call.close());
+    //     };
+    // }, [roomId, connectToNewUser, addVideoStream, peers, connectedUsers]);
+
+
     useEffect(() => {
         const initSocketAndPeer = async () => {
             try {
@@ -56,12 +135,15 @@ const Room = () => {
                     return;
                 }
                 const userId = JSON.parse(user)?._id;
-                console.log("USER_ID ====>> ", userId)
+                console.log("USER_ID ====>> ", userId);
 
+                // Establish socket connection
                 socketRef.current = io('https://vcall-ouea.onrender.com', {
                     transports: ['websocket'],
                     withCredentials: true
                 });
+
+                // Set up peer connection
                 peerRef.current = new Peer(undefined, {
                     host: 'vcall-peer-server.onrender.com',
                     port: 443,
@@ -69,6 +151,7 @@ const Room = () => {
                     secure: true,
                 });
 
+                // Get local media stream
                 if (navigator.mediaDevices) {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     streamRef.current = stream;
@@ -87,12 +170,17 @@ const Room = () => {
                     socketRef.current.emit('join-room', roomId, userId); // Emit room join event
 
                     socketRef.current.on('user-connected', (userId) => {
-                        setConnectedUsers(prevUsers => [...prevUsers, userId]);
+                        setConnectedUsers((prevUsers) => {
+                            if (!prevUsers.includes(userId)) {
+                                return [...prevUsers, userId];
+                            }
+                            return prevUsers;
+                        });
                         connectToNewUser(userId, stream);
                     });
 
                     socketRef.current.on('user-disconnected', (userId) => {
-                        setConnectedUsers(prevUsers => prevUsers.filter(id => id !== userId));
+                        setConnectedUsers((prevUsers) => prevUsers.filter(id => id !== userId));
                     });
 
                     socketRef.current.on('createMessage', ({ sender, text }) => {
@@ -110,8 +198,10 @@ const Room = () => {
             }
         };
 
+        // Run the initialization function once when the component mounts
         initSocketAndPeer();
 
+        // Cleanup the socket connection when the component unmounts
         return () => {
             socketRef.current?.disconnect();
             peerRef.current?.destroy();
@@ -123,7 +213,8 @@ const Room = () => {
             }
             Object.values(peers).forEach(call => call.close());
         };
-    }, [roomId, connectToNewUser, addVideoStream, peers, connectedUsers]);
+    }, [roomId, addVideoStream, connectToNewUser]); // Only depend on roomId, addVideoStream, and connectToNewUser
+
 
     const handleSendMessage = useCallback((text) => {
         const message = { sender: peerRef.current.id, text };
