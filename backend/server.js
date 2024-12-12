@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
+const User = require('./models/User');
 
 const app = express();
 const server = http.createServer(app);
@@ -38,19 +39,25 @@ mongoose
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
+const findUser = async (userId) => {
+    const foundUser = await User.findById(userId);
+    return foundUser
+}
+
 io.on('connection', (socket) => {
     console.log('User connected', socket.id);
 
     socket.on('join-room', (roomId, userId) => {
+
         socket.join(roomId);
-        socket.to(roomId).emit('user-connected', userId);  // Emit to other users in the room
+        socket.to(roomId).emit('user-connected', findUser(userId));  // Emit to other users in the room
 
         socket.on('message', (message) => {
             io.to(roomId).emit('createMessage', message);  // Broadcast the message to the room
         });
 
         socket.on('disconnect', () => {
-            socket.to(roomId).emit('user-disconnected', userId);  // Notify others when a user disconnects
+            socket.to(roomId).emit('user-disconnected', findUser(userId));  // Notify others when a user disconnects
         });
     });
 });
