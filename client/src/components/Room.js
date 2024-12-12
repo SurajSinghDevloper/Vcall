@@ -295,7 +295,7 @@ const Room = () => {
     const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
-    const [connectedUsers, setConnectedUsers] = useState([]); // Connected users state
+    const [connectedUsers, setConnectedUsers] = useState([]);
 
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
         video.srcObject = stream;
@@ -354,7 +354,7 @@ const Room = () => {
                         });
                     });
 
-                    socketRef.current.emit('join-room', roomId, userId);
+                    socketRef.current.emit('join-room', roomId, userId); // Ensure userId matches the backend
 
                     socketRef.current.on('user-connected', (userId) => {
                         setConnectedUsers(prevUsers => [...prevUsers, userId]);
@@ -363,6 +363,8 @@ const Room = () => {
 
                     socketRef.current.on('user-disconnected', (userId) => {
                         setConnectedUsers(prevUsers => prevUsers.filter(id => id !== userId));
+                        const peer = peers[userId];
+                        if (peer) peer.close();
                     });
 
                     socketRef.current.on('createMessage', ({ sender, text }) => {
@@ -393,7 +395,7 @@ const Room = () => {
             }
             Object.values(peers).forEach(call => call.close());
         };
-    }, [roomId, addVideoStream, connectToNewUser]);
+    }, [roomId, addVideoStream, connectToNewUser, peers]);
 
     const handleSendMessage = useCallback((text) => {
         const message = { sender: peerRef.current.id, text };
@@ -519,6 +521,5 @@ const Room = () => {
         </div>
     );
 };
-
 
 export default Room;
