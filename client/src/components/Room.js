@@ -24,6 +24,7 @@ const Room = () => {
     const [videoDevices, setVideoDevices] = useState([]);
     const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
     const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
+    const [connectedUsers, setConnectedUsers] = useState([]);
 
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
         video.srcObject = stream;
@@ -80,7 +81,12 @@ const Room = () => {
                     socketRef.current.emit('join-room', roomId, peerRef.current.id);
 
                     socketRef.current.on('user-connected', (userId) => {
+                        setConnectedUsers(prevUsers => [...prevUsers, userId]);
                         connectToNewUser(userId, stream);
+                    });
+
+                    socketRef.current.on('user-disconnected', (userId) => {
+                        setConnectedUsers(prevUsers => prevUsers.filter(id => id !== userId));
                     });
 
                     socketRef.current.on('createMessage', ({ sender, text }) => {
@@ -110,7 +116,7 @@ const Room = () => {
     }, [roomId, connectToNewUser, addVideoStream, peers]);
 
     const handleSendMessage = useCallback((text) => {
-        const message = { sender: 'Me', text };
+        const message = { sender: peerRef.current.id, text };
         setMessages((prevMessages) => [...prevMessages, message]);
         socketRef.current?.emit('sendMessage', message);
     }, []);
@@ -209,7 +215,14 @@ const Room = () => {
                     <Chat messages={messages} onSendMessage={handleSendMessage} />
                 </Card>
             </div>
-
+            <Card className="m-4 p-4">
+                <h2 className="text-xl font-bold mb-2">Connected Users</h2>
+                <ul>
+                    {connectedUsers.map((userId) => (
+                        <li key={userId}>{userId}</li>
+                    ))}
+                </ul>
+            </Card>
             <Card className="m-4 p-4  flex justify-center items-center space-x-4">
                 <Card >
                     <FormControl>
@@ -256,3 +269,4 @@ const Room = () => {
 };
 
 export default Room;
+

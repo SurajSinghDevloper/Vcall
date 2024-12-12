@@ -1,38 +1,39 @@
-import { Button, Input } from '@mui/material';
 import React, { useState } from 'react';
+import { TextField, Button, List, ListItem, ListItemText } from '@mui/material';
 
 const Chat = ({ messages, onSendMessage }) => {
-    const [message, setMessage] = useState('');
+    const [messageInput, setMessageInput] = useState('');
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (message.trim()) {
-            onSendMessage(message);
-            setMessage('');
+    const handleSend = () => {
+        if (messageInput.trim()) {
+            onSendMessage(messageInput);
+            setMessageInput('');
         }
     };
 
     return (
         <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto mb-4">
-                {messages.map((msg, index) => (
-                    <div key={index} className={`mb-2 ${msg.sender === 'Me' ? 'text-right' : 'text-left'}`}>
-                        <span className="inline-block bg-blue-500 text-white rounded-lg py-2 px-4 max-w-xs break-words">
-                            <strong>{msg.sender}: </strong>{msg.text}
-                        </span>
-                    </div>
+            <List className="flex-1 overflow-auto">
+                {messages.map((message, index) => (
+                    <ListItem key={index}>
+                        <ListItemText
+                            primary={`${message.sender}: ${message.text}`}
+                        />
+                    </ListItem>
                 ))}
-            </div>
-            <form onSubmit={handleSubmit} className="flex space-x-2">
-                <Input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1"
+            </List>
+            <div className="flex mt-4">
+                <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 />
-                <Button type="submit">Send</Button>
-            </form>
+                <Button variant="contained" color="primary" onClick={handleSend}>
+                    Send
+                </Button>
+            </div>
         </div>
     );
 };
