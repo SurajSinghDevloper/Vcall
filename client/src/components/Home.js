@@ -8,7 +8,7 @@ const Home = () => {
 
     // Check if the user is logged in by verifying the presence of a token
     useEffect(() => {
-        const token = localStorage.getItem("authToken"); // Or sessionStorage
+        const token = localStorage.getItem("token"); // Or sessionStorage
         if (!token) {
             // Redirect to login page if the user is not logged in
             navigate("/");
