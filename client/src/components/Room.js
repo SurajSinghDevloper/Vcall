@@ -369,12 +369,12 @@ const Room = () => {
                     socketRef.current.on('user-connected', (userId) => {
                         setConnectedUsers((prevUsers) => {
                             if (!prevUsers.includes(userId)) {
-                                return [...prevUsers, userId];
+                                return [...prevUsers, userId]; // Add userId directly, not an object
                             }
                             return prevUsers;
                         });
-                        connectToNewUser(userId, stream);
                     });
+
 
                     socketRef.current.on('user-disconnected', (userId) => {
                         setConnectedUsers((prevUsers) => prevUsers.filter(id => id !== userId));
