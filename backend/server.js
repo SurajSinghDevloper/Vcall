@@ -112,11 +112,11 @@ io.on('connection', (socket) => {
         console.log(`User ${userId} joined room ${roomId}`);
 
         // Send user info (image and ID) to other users in the room
-        socket.to(roomId).emit('user-connected', { userId, userImage });
+        socket.to(roomId).emit('user-connected', userId);
 
         // Listen for incoming video streams
         socket.on('send-stream', (stream) => {
-            socket.to(roomId).emit('receive-stream', { userId, stream });
+            socket.to(roomId).emit('receive-stream', userId, stream);
         });
 
         // Listen for text messages
