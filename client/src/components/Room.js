@@ -123,7 +123,7 @@ const Room = () => {
             }
             Object.values(peers).forEach(call => call.close());
         };
-    }, [roomId, connectToNewUser, addVideoStream, peers]);
+    }, [roomId, connectToNewUser, addVideoStream, peers, connectedUsers]);
 
     const handleSendMessage = useCallback((text) => {
         const message = { sender: peerRef.current.id, text };
