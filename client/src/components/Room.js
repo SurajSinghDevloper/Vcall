@@ -22,20 +22,6 @@ const Room = () => {
     const [fullscreenVideo, setFullscreenVideo] = useState(null);
     const [connectedUsers, setConnectedUsers] = useState([]);
 
-    // const addVideoStream = useCallback((video, stream, isLocal = false) => {
-    //     video.srcObject = stream;
-    //     video.addEventListener('loadedmetadata', () => {
-    //         video.play();
-    //     });
-    //     const videoContainer = document.getElementById('video-grid');
-    //     video.className = 'video-item';
-    //     if (isLocal) {
-    //         video.classList.add('local-video');
-    //         video.muted = true;
-    //     }
-    //     videoContainer?.appendChild(video);
-    // }, []);
-
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
         video.srcObject = stream;
         video.addEventListener('loadedmetadata', () => {
@@ -50,18 +36,6 @@ const Room = () => {
         videoContainer?.appendChild(video);
     }, []);
 
-    // const connectToNewUser = useCallback((userId, stream) => {
-    //     const call = peerRef.current?.call(userId, stream);
-    //     if (call) {
-    //         const video = document.createElement('video');
-    //         call.on('stream', (userVideoStream) => {
-    //             addVideoStream(video, userVideoStream);
-    //         });
-    //         setPeers(prevPeers => ({ ...prevPeers, [userId]: call }));
-    //     }
-    // }, [addVideoStream]);
-
-
     const connectToNewUser = useCallback((userId, stream) => {
         const call = peerRef.current?.call(userId, stream);
         if (call) {
@@ -72,93 +46,6 @@ const Room = () => {
             setPeers(prevPeers => ({ ...prevPeers, [userId]: call }));
         }
     }, [addVideoStream]);
-
-    // useEffect(() => {
-    //     const initSocketAndPeer = async () => {
-    //         try {
-    //             const user = localStorage.getItem('user');
-    //             if (!user) {
-    //                 console.error("User ID not found in localStorage");
-    //                 return;
-    //             }
-    //             const userId = JSON.parse(user)?._id;
-    //             console.log("USER_ID ====>> ", userId);
-
-    //             // Establish socket connection
-    //             socketRef.current = io('https://vcall-ouea.onrender.com', {
-    //                 transports: ['websocket'],
-    //                 withCredentials: true
-    //             });
-
-    //             // Set up peer connection
-    //             peerRef.current = new Peer(undefined, {
-    //                 host: 'vcall-peer-server.onrender.com',
-    //                 port: 443,
-    //                 path: '/peerjs',
-    //                 secure: true,
-    //             });
-
-    //             // Get local media stream
-    //             if (navigator.mediaDevices) {
-    //                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    //                 streamRef.current = stream;
-    //                 if (myVideo.current) {
-    //                     addVideoStream(myVideo.current, stream, true);
-    //                 }
-
-    //                 peerRef.current.on('call', (call) => {
-    //                     call.answer(stream);
-    //                     const video = document.createElement('video');
-    //                     call.on('stream', (userVideoStream) => {
-    //                         addVideoStream(video, userVideoStream);
-    //                     });
-    //                 });
-
-    //                 socketRef.current.emit('join-room', roomId, userId); // Emit room join event
-
-    //                 socketRef.current.on('user-connected', (userId) => {
-    //                     setConnectedUsers((prevUsers) => {
-    //                         if (!prevUsers.includes(userId)) {
-    //                             return [...prevUsers, userId]; // Add userId directly, not an object
-    //                         }
-    //                         return prevUsers;
-    //                     });
-    //                 });
-
-
-    //                 socketRef.current.on('user-disconnected', (userId) => {
-    //                     setConnectedUsers((prevUsers) => prevUsers.filter(id => id !== userId));
-    //                 });
-
-    //                 socketRef.current.on('createMessage', ({ sender, text }) => {
-    //                     setMessages((prevMessages) => [...prevMessages, { sender, text }]);
-    //                 });
-
-    //                 socketRef.current.on('update-connected-users', (users) => {
-    //                     setConnectedUsers(users);
-    //                 });
-    //             } else {
-    //                 console.error('Media devices are not supported in this environment.');
-    //             }
-    //         } catch (error) {
-    //             console.error("Error initializing socket or peer:", error);
-    //         }
-    //     };
-
-    //     initSocketAndPeer();
-
-    //     return () => {
-    //         socketRef.current?.disconnect();
-    //         peerRef.current?.destroy();
-    //         if (streamRef.current) {
-    //             streamRef.current.getTracks().forEach(track => track.stop());
-    //         }
-    //         if (screenShareStreamRef.current) {
-    //             screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-    //         }
-    //         Object.values(peers).forEach(call => call.close());
-    //     };
-    // }, [roomId, addVideoStream, connectToNewUser]);
 
     useEffect(() => {
         const initSocketAndPeer = async () => {
@@ -171,10 +58,13 @@ const Room = () => {
                 const userId = JSON.parse(user)?._id;
                 console.log("USER_ID ====>> ", userId);
 
-                // Initialize socket connection
-                socketRef.current = io('http://localhost:8080', { transports: ['websocket'], withCredentials: true });
+                // Establish socket connection
+                socketRef.current = io('https://vcall-ouea.onrender.com', {
+                    transports: ['websocket'],
+                    withCredentials: true
+                });
 
-                // Initialize PeerJS
+                // Set up peer connection
                 peerRef.current = new Peer(undefined, {
                     host: 'vcall-peer-server.onrender.com',
                     port: 443,
@@ -182,7 +72,7 @@ const Room = () => {
                     secure: true,
                 });
 
-                // Get media stream
+                // Get local media stream
                 if (navigator.mediaDevices) {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     streamRef.current = stream;
@@ -198,11 +88,17 @@ const Room = () => {
                         });
                     });
 
-                    socketRef.current.emit('join-room', roomId, userId); // Join room event
+                    socketRef.current.emit('join-room', roomId, userId); // Emit room join event
 
                     socketRef.current.on('user-connected', (userId) => {
-                        setConnectedUsers((prevUsers) => [...prevUsers, userId]);
+                        setConnectedUsers((prevUsers) => {
+                            if (!prevUsers.includes(userId)) {
+                                return [...prevUsers, userId]; // Add userId directly, not an object
+                            }
+                            return prevUsers;
+                        });
                     });
+
 
                     socketRef.current.on('user-disconnected', (userId) => {
                         setConnectedUsers((prevUsers) => prevUsers.filter(id => id !== userId));
@@ -212,6 +108,9 @@ const Room = () => {
                         setMessages((prevMessages) => [...prevMessages, { sender, text }]);
                     });
 
+                    socketRef.current.on('update-connected-users', (users) => {
+                        setConnectedUsers(users);
+                    });
                 } else {
                     console.error('Media devices are not supported in this environment.');
                 }
@@ -228,10 +127,12 @@ const Room = () => {
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
+            if (screenShareStreamRef.current) {
+                screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+            }
             Object.values(peers).forEach(call => call.close());
         };
-    }, [roomId, addVideoStream]);
-
+    }, [roomId, addVideoStream, connectToNewUser]);
 
     const handleSendMessage = useCallback((text) => {
         const message = { sender: peerRef.current.id, text };
