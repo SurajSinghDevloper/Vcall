@@ -24,7 +24,7 @@ const io = new Server(server, {
     }
 });
 
-//  'mongodb+srv://suraj31kumar1999:suraj@143@cluster0.gnqtqdz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+// Connect to MongoDB (use your actual MongoDB URI)
 const mongoURI = "mongodb+srv://suraj31kumar1999:suraj%40143@cluster0.gnqtqdz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose
     .connect(mongoURI)
@@ -43,14 +43,14 @@ io.on('connection', (socket) => {
 
     socket.on('join-room', (roomId, userId) => {
         socket.join(roomId);
-        socket.to(roomId).emit('user-connected', userId);
+        socket.to(roomId).emit('user-connected', userId);  // Emit to other users in the room
 
         socket.on('message', (message) => {
-            io.to(roomId).emit('createMessage', message);
+            io.to(roomId).emit('createMessage', message);  // Broadcast the message to the room
         });
 
         socket.on('disconnect', () => {
-            socket.to(roomId).emit('user-disconnected', userId);
+            socket.to(roomId).emit('user-disconnected', userId);  // Notify others when a user disconnects
         });
     });
 });

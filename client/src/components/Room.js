@@ -54,6 +54,13 @@ const Room = () => {
     useEffect(() => {
         const initSocketAndPeer = async () => {
             try {
+                // Retrieve userId from localStorage
+                const user = localStorage.getItem('user');
+                if (!user) {
+                    console.error("User ID not found in localStorage");
+                    return;
+                }
+                const userId = user?._id;
                 socketRef.current = io('https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
                     host: 'https://vcall-peer-server.onrender.com',
@@ -78,7 +85,7 @@ const Room = () => {
                         });
                     });
 
-                    socketRef.current.emit('join-room', roomId, peerRef.current.id);
+                    socketRef.current.emit('join-room', roomId, userId); // Use userId from localStorage
 
                     socketRef.current.on('user-connected', (userId) => {
                         setConnectedUsers(prevUsers => [...prevUsers, userId]);
@@ -269,4 +276,3 @@ const Room = () => {
 };
 
 export default Room;
-
