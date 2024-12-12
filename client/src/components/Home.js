@@ -7,13 +7,13 @@ const Home = () => {
     const navigate = useNavigate();
 
     const createNewMeeting = () => {
-        const id = uuidV4(); // Generate a unique meeting ID
-        navigate(`/room/${id}`); // Redirect to the meeting room
+        const id = uuidV4();
+        navigate(`/room/${id}`);
     };
 
     const joinMeeting = () => {
         if (meetingID.trim()) {
-            navigate(`/room/${meetingID.trim()}`); // Redirect to the specified meeting room
+            navigate(`/room/${meetingID.trim()}`);
         } else {
             alert("Please enter a valid Meeting ID.");
         }

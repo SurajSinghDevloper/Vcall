@@ -109,7 +109,6 @@ const Room = () => {
         };
     }, [roomId, connectToNewUser, addVideoStream, peers]);
 
-
     const handleSendMessage = useCallback((text) => {
         const message = { sender: 'Me', text };
         setMessages((prevMessages) => [...prevMessages, message]);
@@ -252,8 +251,6 @@ const Room = () => {
                     {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
                 </Button>
             </Card>
-
-
         </div>
     );
 };
