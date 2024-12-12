@@ -19,7 +19,7 @@ const Room = () => {
     const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
-    const [setFullscreenVideo] = useState(null);
+    const [fullscreenVideo, setFullscreenVideo] = useState(null); // Store fullscreen video
     const [connectedUsers, setConnectedUsers] = useState([]); // Connected users state
 
     const addVideoStream = useCallback((video, stream, isLocal = false) => {
@@ -50,7 +50,6 @@ const Room = () => {
     useEffect(() => {
         const initSocketAndPeer = async () => {
             try {
-                // Retrieve userId from localStorage
                 const user = localStorage.getItem('user');
                 if (!user) {
                     console.error("User ID not found in localStorage");
@@ -58,13 +57,6 @@ const Room = () => {
                 }
                 const userId = JSON.parse(user)?._id;
                 console.log("USER_ID ====>> ", userId)
-                // socketRef.current = io('http://localhost:8080');
-                // peerRef.current = new Peer(undefined, {
-                //     host: '/',
-                //     port: 8988,
-                //     path: '/peerjs',
-                //     secure: false
-                // });
 
                 socketRef.current = io('https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
@@ -74,7 +66,6 @@ const Room = () => {
                     secure: true,
                 });
 
-                // Check if mediaDevices is available in the browser
                 if (navigator.mediaDevices) {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                     streamRef.current = stream;
@@ -105,7 +96,6 @@ const Room = () => {
                         setMessages((prevMessages) => [...prevMessages, { sender, text }]);
                     });
 
-                    // Listen for the updated user list after each user connection
                     socketRef.current.on('update-connected-users', (users) => {
                         setConnectedUsers(users);
                     });
@@ -199,16 +189,22 @@ const Room = () => {
     };
 
     const handleVideoClick = (video) => {
-        setFullscreenVideo(video);
+        setFullscreenVideo(video); // Set clicked video for fullscreen
+    };
+
+    const exitFullscreen = () => {
+        setFullscreenVideo(null); // Exit fullscreen by clearing the selected video
     };
 
     return (
         <div className="flex flex-col h-screen bg-gray-100">
+            {/* Room Header */}
             <Card className="m-4 p-4 flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Room: {roomId}</h1>
                 <Button variant="contained" color="secondary" onClick={() => window.location.href = '/'}>Leave Room</Button>
             </Card>
 
+            {/* Main Video Grid */}
             <div className="flex flex-1 m-4 space-x-4">
                 <Card className="flex-1 p-4 overflow-hidden">
                     <div id="video-grid" className="grid grid-cols-4 gap-4 h-full overflow-auto flex-end relative">
@@ -233,6 +229,7 @@ const Room = () => {
                 </Card>
             </div>
 
+            {/* Connected Users */}
             <Card className="m-4 p-4">
                 <h2 className="text-xl font-bold mb-2">Connected Users</h2>
                 <ul>
@@ -242,7 +239,8 @@ const Room = () => {
                 </ul>
             </Card>
 
-            <Card className="m-4 p-4  flex justify-center items-center space-x-4">
+            {/* Video Controls */}
+            <Card className="m-4 p-4 flex justify-center items-center space-x-4">
                 <Button onClick={isScreenSharing ? stopScreenSharing : startScreenSharing} variant="contained" color={isScreenSharing ? "secondary" : "primary"}>
                     {isScreenSharing ? 'Stop Screen Sharing' : 'Start Screen Sharing'}
                 </Button>
@@ -253,6 +251,17 @@ const Room = () => {
                     {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
                 </Button>
             </Card>
+
+            {/* Fullscreen Video */}
+            {fullscreenVideo && (
+                <div className="fullscreen-video" onClick={exitFullscreen}>
+                    <video
+                        ref={fullscreenVideo}
+                        className="w-full h-full object-cover"
+                        controls
+                    />
+                </div>
+            )}
         </div>
     );
 };
