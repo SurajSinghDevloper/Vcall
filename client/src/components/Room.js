@@ -53,10 +53,9 @@ const Room = () => {
     useEffect(() => {
         const initSocketAndPeer = async () => {
             try {
-                socketRef.current = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:8080');
+                socketRef.current = io(process.env.REACT_APP_SOCKET_URL || 'https://vcall-ouea.onrender.com');
                 peerRef.current = new Peer(undefined, {
-                    host: '/',
-                    port: '8988',
+                    host: 'https://vcall-peer-server.onrender.com',
                     path: '/peerjs',
                 });
 
