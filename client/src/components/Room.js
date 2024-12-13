@@ -36,11 +36,16 @@
 //     }, []);
 
 //     const connectToNewUser = useCallback((userId, stream) => {
-//         const call = peerRef.current?.call(userId, stream);
+//         console.log('Connecting to new user:', userId);
+//         const call = peerRef.current.call(userId, stream);
 //         if (call) {
 //             const video = document.createElement('video');
 //             call.on('stream', (userVideoStream) => {
+//                 console.log('Received stream from user:', userId);
 //                 addVideoStream(video, userVideoStream);
+//             });
+//             call.on('close', () => {
+//                 video.remove();
 //             });
 //             setPeers(prevPeers => ({ ...prevPeers, [userId]: call }));
 //         }
@@ -56,11 +61,16 @@
 //                 }
 //                 const userId = JSON.parse(user)?._id;
 //                 socketRef.current = io('https://vcall-ouea.onrender.com');
-//                 peerRef.current = new Peer(undefined, {
+//                 peerRef.current = new Peer(userId, {
 //                     host: 'vcall-peer-server.onrender.com',
 //                     port: 443,
 //                     path: '/peerjs',
 //                     secure: true,
+//                 });
+
+//                 peerRef.current.on('open', (id) => {
+//                     console.log('My peer ID is: ' + id);
+//                     socketRef.current.emit('join-room', roomId, id);
 //                 });
 
 //                 if (navigator.mediaDevices) {
@@ -76,33 +86,28 @@
 //                         call.on('stream', (userVideoStream) => {
 //                             addVideoStream(video, userVideoStream);
 //                         });
+//                         setPeers(prevPeers => ({ ...prevPeers, [call.peer]: call }));
 //                     });
 
-//                     socketRef.current.emit('join-room', roomId, userId); // Ensure userId matches the backend
-
-//                     socketRef.current.on('user-connected', (userId, userStream) => {
-//                         setConnectedUsers(prevUsers => [...prevUsers, userId]);
-//                         if (userStream) {
-//                             const video = document.createElement('video');
-//                             addVideoStream(video, userStream);
-//                             setPeers(prevPeers => ({ ...prevPeers, [userId]: video }));
-//                         } else {
-//                             connectToNewUser(userId, stream);
-//                         }
+//                     socketRef.current.on('user-connected', (userId) => {
+//                         console.log('User connected:', userId);
+//                         connectToNewUser(userId, stream);
 //                     });
 
 //                     socketRef.current.on('user-disconnected', (userId) => {
-//                         setConnectedUsers(prevUsers => prevUsers.filter(id => id !== userId));
-//                         const peer = peers[userId];
-//                         if (peer) peer.close();
+//                         console.log('User disconnected:', userId);
+//                         if (peers[userId]) {
+//                             peers[userId].close();
+//                             setPeers(prevPeers => {
+//                                 const newPeers = { ...prevPeers };
+//                                 delete newPeers[userId];
+//                                 return newPeers;
+//                             });
+//                         }
 //                     });
 
 //                     socketRef.current.on('createMessage', (message) => {
 //                         setMessages(prevMessages => [...prevMessages, message]);
-//                     });
-
-//                     socketRef.current.on('update-connected-users', (users) => {
-//                         setConnectedUsers(users);
 //                     });
 //                 } else {
 //                     console.error('Media devices are not supported in this environment.');
@@ -125,7 +130,7 @@
 //             }
 //             Object.values(peers).forEach(call => call.close());
 //         };
-//     }, [roomId, addVideoStream, connectToNewUser]);
+//     }, [roomId, addVideoStream, connectToNewUser, peers]);
 
 //     const handleSendMessage = useCallback((text) => {
 //         const user = JSON.parse(localStorage.getItem('user'));
@@ -255,7 +260,6 @@
 
 // export default Room;
 
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -328,7 +332,16 @@ const Room = () => {
 
                 peerRef.current.on('open', (id) => {
                     console.log('My peer ID is: ' + id);
+                    console.log('Joining room:', roomId);
                     socketRef.current.emit('join-room', roomId, id);
+                });
+
+                socketRef.current.on('connect', () => {
+                    console.log('Socket connected');
+                });
+
+                socketRef.current.on('disconnect', (reason) => {
+                    console.log('Socket disconnected:', reason);
                 });
 
                 if (navigator.mediaDevices) {
@@ -348,7 +361,7 @@ const Room = () => {
                     });
 
                     socketRef.current.on('user-connected', (userId) => {
-                        console.log('User connected:', userId);
+                        console.log('User connected event received for:', userId);
                         connectToNewUser(userId, stream);
                     });
 
