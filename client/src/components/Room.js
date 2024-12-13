@@ -401,7 +401,7 @@ const Room = () => {
             }
             Object.values(peers).forEach(call => call.close());
         };
-    }, [roomId, addVideoStream, connectToNewUser, peers]);
+    }, [roomId, addVideoStream, connectToNewUser]);
 
     const handleSendMessage = useCallback((text) => {
         const user = JSON.parse(localStorage.getItem('user'));
